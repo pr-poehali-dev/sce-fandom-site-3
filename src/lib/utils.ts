@@ -14,9 +14,13 @@ export const storage = {
   
   // Сохранение данных в localStorage
   saveData() {
-    localStorage.setItem('sce_users', JSON.stringify(this.users));
-    localStorage.setItem('sce_objects', JSON.stringify(this.sceObjects));
-    localStorage.setItem('sce_posts', JSON.stringify(this.posts));
+    try {
+      localStorage.setItem('sce_users', JSON.stringify(this.users));
+      localStorage.setItem('sce_objects', JSON.stringify(this.sceObjects));
+      localStorage.setItem('sce_posts', JSON.stringify(this.posts));
+    } catch (error) {
+      console.error('Ошибка сохранения данных:', error);
+    }
   },
   
   // Загрузка данных из localStorage
@@ -37,14 +41,25 @@ export const storage = {
 
 // Форматирование даты в человекочитаемый вид
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
+  try {
+    const date = new Date(dateString);
+    
+    // Проверяем, что дата валидна
+    if (isNaN(date.getTime())) {
+      return 'Некорректная дата';
+    }
+    
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  } catch (error) {
+    console.error('Ошибка форматирования даты:', error);
+    return 'Ошибка даты';
+  }
 }
 
 // Генерация уникального ID
@@ -59,13 +74,22 @@ export function sendVerificationEmail(email: string, token: string) {
   // В реальном приложении здесь будет код для отправки письма
   
   // Сохраняем токен в локальном хранилище для имитации проверки
-  const verificationTokens = JSON.parse(localStorage.getItem('verification_tokens') || '{}');
-  verificationTokens[email] = token;
-  localStorage.setItem('verification_tokens', JSON.stringify(verificationTokens));
+  try {
+    const verificationTokens = JSON.parse(localStorage.getItem('verification_tokens') || '{}');
+    verificationTokens[email] = token;
+    localStorage.setItem('verification_tokens', JSON.stringify(verificationTokens));
+  } catch (error) {
+    console.error('Ошибка сохранения токена верификации:', error);
+  }
 }
 
 // Проверка верификационного токена
 export function verifyEmailToken(email: string, token: string): boolean {
-  const verificationTokens = JSON.parse(localStorage.getItem('verification_tokens') || '{}');
-  return verificationTokens[email] === token;
+  try {
+    const verificationTokens = JSON.parse(localStorage.getItem('verification_tokens') || '{}');
+    return verificationTokens[email] === token;
+  } catch (error) {
+    console.error('Ошибка проверки токена верификации:', error);
+    return false;
+  }
 }

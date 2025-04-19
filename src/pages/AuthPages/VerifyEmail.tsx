@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,23 +30,23 @@ const VerifyEmail: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const email = searchParams.get('email') || '';
-  const token = searchParams.get('token') || '';
+  const emailParam = searchParams.get('email') || '';
+  const tokenParam = searchParams.get('token') || '';
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email,
-      token,
+      email: emailParam,
+      token: tokenParam,
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Автоматическая верификация, если есть email и токен в URL
-    if (email && token) {
-      handleVerification(email, token);
+    if (emailParam && tokenParam) {
+      handleVerification(emailParam, tokenParam);
     }
-  }, [email, token]);
+  }, [emailParam, tokenParam]);
 
   const handleVerification = async (email: string, token: string) => {
     try {
@@ -126,9 +126,9 @@ const VerifyEmail: React.FC = () => {
           <CardFooter className="flex justify-center">
             <span className="text-sm text-muted-foreground">
               После подтверждения email вы сможете{' '}
-              <a href="/login" className="text-sce-primary hover:underline">
+              <Link to="/login" className="text-sce-primary hover:underline">
                 войти в систему
-              </a>
+              </Link>
             </span>
           </CardFooter>
         </Card>

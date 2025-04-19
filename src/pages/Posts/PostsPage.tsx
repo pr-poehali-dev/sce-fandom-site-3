@@ -19,13 +19,13 @@ import { FileTextIcon } from 'lucide-react';
 const PostsPage: React.FC = () => {
   const { posts } = useSCE();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   
   // Фильтрация постов
   const filteredPosts = posts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           post.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
+    const matchesCategory = selectedCategory === 'all' ? true : post.category === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
@@ -56,7 +56,7 @@ const PostsPage: React.FC = () => {
                 <SelectValue placeholder="Категория" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все категории</SelectItem>
+                <SelectItem value="all">Все категории</SelectItem>
                 {Object.values(PostCategory).map((category) => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}

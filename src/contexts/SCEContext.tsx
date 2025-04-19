@@ -26,11 +26,16 @@ export const SCEProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { user } = useAuth();
 
   useEffect(() => {
-    // Загружаем данные при инициализации
-    storage.loadData();
-    setObjects(storage.sceObjects);
-    setPosts(storage.posts);
-    setIsLoading(false);
+    try {
+      // Загружаем данные при инициализации
+      storage.loadData();
+      setObjects(storage.sceObjects || []);
+      setPosts(storage.posts || []);
+    } catch (error) {
+      console.error('Ошибка при загрузке данных SCE:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const getObjectById = (id: string): SCEObject | undefined => {
@@ -44,141 +49,171 @@ export const SCEProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const createObject = async (
     objectData: Omit<SCEObject, 'id' | 'author' | 'createdAt' | 'updatedAt'>
   ): Promise<SCEObject | undefined> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return undefined;
+      }
+
+      const now = new Date().toISOString();
+      const newObject: SCEObject = {
+        id: generateId(),
+        author: user.username,
+        createdAt: now,
+        updatedAt: now,
+        ...objectData
+      };
+
+      // Добавляем объект в хранилище
+      storage.sceObjects.push(newObject);
+      storage.saveData();
+      
+      // Обновляем состояние
+      setObjects(prev => [...prev, newObject]);
+      
+      return newObject;
+    } catch (error) {
+      console.error('Ошибка при создании объекта:', error);
       return undefined;
     }
-
-    const now = new Date().toISOString();
-    const newObject: SCEObject = {
-      id: generateId(),
-      author: user.username,
-      createdAt: now,
-      updatedAt: now,
-      ...objectData
-    };
-
-    // Добавляем объект в хранилище
-    storage.sceObjects.push(newObject);
-    storage.saveData();
-    
-    // Обновляем состояние
-    setObjects(prev => [...prev, newObject]);
-    
-    return newObject;
   };
 
   const updateObject = async (id: string, objectData: Partial<SCEObject>): Promise<boolean> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return false;
+      }
+
+      const index = storage.sceObjects.findIndex(obj => obj.id === id);
+      if (index === -1) {
+        return false;
+      }
+
+      const updatedObject = {
+        ...storage.sceObjects[index],
+        ...objectData,
+        updatedAt: new Date().toISOString()
+      };
+
+      storage.sceObjects[index] = updatedObject;
+      storage.saveData();
+      
+      // Обновляем состояние
+      setObjects(prev => prev.map(obj => obj.id === id ? updatedObject : obj));
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка при обновлении объекта:', error);
       return false;
     }
-
-    const index = storage.sceObjects.findIndex(obj => obj.id === id);
-    if (index === -1) {
-      return false;
-    }
-
-    const updatedObject = {
-      ...storage.sceObjects[index],
-      ...objectData,
-      updatedAt: new Date().toISOString()
-    };
-
-    storage.sceObjects[index] = updatedObject;
-    storage.saveData();
-    
-    // Обновляем состояние
-    setObjects(prev => prev.map(obj => obj.id === id ? updatedObject : obj));
-    
-    return true;
   };
 
   const deleteObject = async (id: string): Promise<boolean> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return false;
+      }
+
+      const index = storage.sceObjects.findIndex(obj => obj.id === id);
+      if (index === -1) {
+        return false;
+      }
+
+      storage.sceObjects.splice(index, 1);
+      storage.saveData();
+      
+      // Обновляем состояние
+      setObjects(prev => prev.filter(obj => obj.id !== id));
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка при удалении объекта:', error);
       return false;
     }
-
-    const index = storage.sceObjects.findIndex(obj => obj.id === id);
-    if (index === -1) {
-      return false;
-    }
-
-    storage.sceObjects.splice(index, 1);
-    storage.saveData();
-    
-    // Обновляем состояние
-    setObjects(prev => prev.filter(obj => obj.id !== id));
-    
-    return true;
   };
 
   const createPost = async (
     postData: Omit<Post, 'id' | 'author' | 'createdAt' | 'updatedAt'>
   ): Promise<Post | undefined> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return undefined;
+      }
+
+      const now = new Date().toISOString();
+      const newPost: Post = {
+        id: generateId(),
+        author: user.username,
+        createdAt: now,
+        updatedAt: now,
+        ...postData
+      };
+
+      // Добавляем пост в хранилище
+      storage.posts.push(newPost);
+      storage.saveData();
+      
+      // Обновляем состояние
+      setPosts(prev => [...prev, newPost]);
+      
+      return newPost;
+    } catch (error) {
+      console.error('Ошибка при создании поста:', error);
       return undefined;
     }
-
-    const now = new Date().toISOString();
-    const newPost: Post = {
-      id: generateId(),
-      author: user.username,
-      createdAt: now,
-      updatedAt: now,
-      ...postData
-    };
-
-    // Добавляем пост в хранилище
-    storage.posts.push(newPost);
-    storage.saveData();
-    
-    // Обновляем состояние
-    setPosts(prev => [...prev, newPost]);
-    
-    return newPost;
   };
 
   const updatePost = async (id: string, postData: Partial<Post>): Promise<boolean> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return false;
+      }
+
+      const index = storage.posts.findIndex(post => post.id === id);
+      if (index === -1) {
+        return false;
+      }
+
+      const updatedPost = {
+        ...storage.posts[index],
+        ...postData,
+        updatedAt: new Date().toISOString()
+      };
+
+      storage.posts[index] = updatedPost;
+      storage.saveData();
+      
+      // Обновляем состояние
+      setPosts(prev => prev.map(post => post.id === id ? updatedPost : post));
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка при обновлении поста:', error);
       return false;
     }
-
-    const index = storage.posts.findIndex(post => post.id === id);
-    if (index === -1) {
-      return false;
-    }
-
-    const updatedPost = {
-      ...storage.posts[index],
-      ...postData,
-      updatedAt: new Date().toISOString()
-    };
-
-    storage.posts[index] = updatedPost;
-    storage.saveData();
-    
-    // Обновляем состояние
-    setPosts(prev => prev.map(post => post.id === id ? updatedPost : post));
-    
-    return true;
   };
 
   const deletePost = async (id: string): Promise<boolean> => {
-    if (!user || user.role !== 'ADMIN') {
+    try {
+      if (!user || user.role !== 'ADMIN') {
+        return false;
+      }
+
+      const index = storage.posts.findIndex(post => post.id === id);
+      if (index === -1) {
+        return false;
+      }
+
+      storage.posts.splice(index, 1);
+      storage.saveData();
+      
+      // Обновляем состояние
+      setPosts(prev => prev.filter(post => post.id !== id));
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка при удалении поста:', error);
       return false;
     }
-
-    const index = storage.posts.findIndex(post => post.id === id);
-    if (index === -1) {
-      return false;
-    }
-
-    storage.posts.splice(index, 1);
-    storage.saveData();
-    
-    // Обновляем состояние
-    setPosts(prev => prev.filter(post => post.id !== id));
-    
-    return true;
   };
 
   return (

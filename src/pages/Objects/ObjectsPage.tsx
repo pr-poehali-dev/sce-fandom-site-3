@@ -18,13 +18,13 @@ import { ShieldIcon } from 'lucide-react';
 const ObjectsPage: React.FC = () => {
   const { objects } = useSCE();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedClass, setSelectedClass] = useState<string>('all');
   
   // Фильтрация объектов
   const filteredObjects = objects.filter(obj => {
     const matchesSearch = obj.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           obj.number.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesClass = selectedClass ? obj.class === selectedClass : true;
+    const matchesClass = selectedClass === 'all' ? true : obj.class === selectedClass;
     
     return matchesSearch && matchesClass;
   });
@@ -62,7 +62,7 @@ const ObjectsPage: React.FC = () => {
                 <SelectValue placeholder="Класс объекта" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все классы</SelectItem>
+                <SelectItem value="all">Все классы</SelectItem>
                 {Object.values(SCEClass).map((classType) => (
                   <SelectItem key={classType} value={classType}>{classType}</SelectItem>
                 ))}
