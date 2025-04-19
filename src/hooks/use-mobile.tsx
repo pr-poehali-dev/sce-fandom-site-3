@@ -17,3 +17,6 @@ export function useIsMobile() {
 
   return !!isMobile
 }
+
+// Экспортируем функцию по умолчанию для обратной совместимости
+export default useIsMobile
